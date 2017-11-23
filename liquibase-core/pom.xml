@@ -253,6 +253,7 @@
 							javax.sql.*,
 							org.osgi.*,
 							org.yaml.snakeyaml.*,
+							org.apache.derby.jdbc.*;resolution:=optional,
 							*;resolution:=optional
 						</Import-Package>
 					</instructions>
