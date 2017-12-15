@@ -10,12 +10,12 @@
     <parent>
         <groupId>org.liquibase</groupId>
         <artifactId>liquibase-parent</artifactId>
-        <version>3.5.1-cg.1</version>
+      <version>3.5.3-cg.1</version>
     </parent>
 
     <properties>
         <bundle.namespace>liquibase.*</bundle.namespace>
-        <project.version>3.5.1</project.version>
+        <project.version>3.5.3</project.version>
     </properties>
 
     <dependencies>
@@ -320,6 +320,9 @@
                         <goals>
                             <goal>javacc</goal>
                         </goals>
+                        <configuration>
+                            <userCharStream>true</userCharStream>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

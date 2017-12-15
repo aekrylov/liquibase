@@ -1,5 +1,7 @@
 package liquibase.parser.core.yaml;
 
+import liquibase.configuration.GlobalConfiguration;
+import liquibase.configuration.LiquibaseConfiguration;
 import liquibase.database.Database;
 import liquibase.database.DatabaseFactory;
 import liquibase.exception.LiquibaseParseException;
@@ -14,6 +16,7 @@ import org.yaml.snakeyaml.Yaml;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -31,9 +34,15 @@ public class YamlSnapshotParser extends YamlParser implements SnapshotParser {
 
             Map parsedYaml;
             try {
-                parsedYaml = yaml.loadAs(new InputStreamReader(stream, "UTF-8"), Map.class);
+                parsedYaml = yaml.loadAs(new InputStreamReader(stream, LiquibaseConfiguration.getInstance().getConfiguration(GlobalConfiguration.class).getOutputEncoding()), Map.class);
             } catch (Exception e) {
                 throw new LiquibaseParseException("Syntax error in " + getSupportedFileExtensions()[0] + ": " + e.getMessage(), e);
+            }
+            finally {
+                try {
+                    stream.close();
+                } catch (IOException ioe) {
+                }
             }
 
             Map rootList = (Map) parsedYaml.get("snapshot");

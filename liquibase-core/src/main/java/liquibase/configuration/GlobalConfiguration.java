@@ -18,6 +18,9 @@ public class GlobalConfiguration extends AbstractConfigurationContainer {
     public static final String CONVERT_DATA_TYPES = "convertDataTypes";
     public static final String GENERATE_CHANGESET_CREATED_VALUES = "generateChangeSetCreatedValues";
     public static final String AUTO_REORG = "autoReorg";
+    public static final String DIFF_COLUMN_ORDER = "diffColumnOrder";
+    public static final String ALWAYS_OVERRIDE_STORED_LOGIC_SCHEMA = "alwaysOverrideStoredLogicSchema";
+    public static final String GENERATED_CHANGESET_IDS_INCLUDE_DESCRIPTION = "generatedChangeSetIdsContainsDescription";
 
     public GlobalConfiguration() {
         super("liquibase");
@@ -72,6 +75,19 @@ public class GlobalConfiguration extends AbstractConfigurationContainer {
         getContainer().addProperty(AUTO_REORG, Boolean.class)
                 .setDescription("Should Liquibase automatically include REORG TABLE commands when needed?")
                 .setDefaultValue(true);
+
+        getContainer().addProperty(DIFF_COLUMN_ORDER, Boolean.class)
+                .setDescription("Should Liquibase compare column order in diff operation?")
+                .setDefaultValue(true);
+
+        getContainer().addProperty(ALWAYS_OVERRIDE_STORED_LOGIC_SCHEMA, Boolean.class)
+                .setDescription("When generating SQL for createProcedure, should the procedure schema be forced to the default schema if no schemaName attribute is set?")
+                .setDefaultValue(false);
+
+
+        getContainer().addProperty(GENERATED_CHANGESET_IDS_INCLUDE_DESCRIPTION, Boolean.class)
+                .setDescription("Should Liquibase include the change description in the id when generating changeSets?")
+                .setDefaultValue(false);
     }
 
     /**
@@ -191,6 +207,35 @@ public class GlobalConfiguration extends AbstractConfigurationContainer {
 
     public GlobalConfiguration setOutputEncoding(String name) {
         getContainer().setValue(OUTPUT_ENCODING, name);
+        return this;
+    }
+
+    public Boolean getDiffColumnOrder() {
+        return getContainer().getValue(DIFF_COLUMN_ORDER, Boolean.class);
+    }
+
+    public GlobalConfiguration setDiffColumnOrder(boolean diff) {
+        getContainer().setValue(DIFF_COLUMN_ORDER, diff);
+        return this;
+    }
+
+
+    public Boolean getAlwaysOverrideStoredLogicSchema() {
+        return getContainer().getValue(ALWAYS_OVERRIDE_STORED_LOGIC_SCHEMA, Boolean.class);
+    }
+
+    public GlobalConfiguration setAlwaysOverrideStoredLogicSchema(boolean override) {
+        getContainer().setValue(ALWAYS_OVERRIDE_STORED_LOGIC_SCHEMA, override);
+        return this;
+    }
+
+
+    public Boolean getGeneratedChangeSetIdsContainDescription() {
+        return getContainer().getValue(GENERATED_CHANGESET_IDS_INCLUDE_DESCRIPTION, Boolean.class);
+    }
+
+    public GlobalConfiguration setGeneratedChangeSetIdsContainDescription(boolean containDescription) {
+        getContainer().setValue(GENERATED_CHANGESET_IDS_INCLUDE_DESCRIPTION, containDescription);
         return this;
     }
 }

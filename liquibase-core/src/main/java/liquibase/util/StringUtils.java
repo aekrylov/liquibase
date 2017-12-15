@@ -56,7 +56,7 @@ public class StringUtils {
                 previousDelimiter = true;
             } else {
                 if (!previousDelimiter || StringUtils.trimToNull((String) piece) != null) { //don't include whitespace after a delimiter
-                    if (!currentString.equals("") || StringUtils.trimToNull((String) piece) != null) { //don't include whitespace before the statement
+                    if (!currentString.toString().equals("") || StringUtils.trimToNull((String) piece) != null) { //don't include whitespace before the statement
                         currentString.append(piece);
                     }
                 }
@@ -75,9 +75,13 @@ public class StringUtils {
 
     protected static boolean isDelimiter(String piece, String previousPiece, String endDelimiter) {
         if (endDelimiter == null) {
-            return piece.equals(";") || ((piece.equalsIgnoreCase("go") || piece.equalsIgnoreCase("/")) && (previousPiece == null || previousPiece.endsWith("\n")));
+            return piece.equals(";") || ((piece.equalsIgnoreCase("go") || piece.equals("/")) && (previousPiece == null || previousPiece.endsWith("\n")));
         } else {
-            return piece.toLowerCase().matches(endDelimiter.toLowerCase()) || (previousPiece+piece).toLowerCase().matches(endDelimiter.toLowerCase());
+            if (endDelimiter.length() == 1) {
+                return piece.toLowerCase().equalsIgnoreCase(endDelimiter.toLowerCase());
+            } else {
+                return piece.toLowerCase().matches(endDelimiter.toLowerCase()) || (previousPiece+piece).toLowerCase().matches("[.\n\r]*"+endDelimiter.toLowerCase());
+            }
         }
     }
 

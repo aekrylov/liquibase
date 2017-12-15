@@ -7,8 +7,10 @@ import liquibase.change.ColumnConfig;
 import liquibase.change.core.AddPrimaryKeyChange;
 import liquibase.change.core.CreateIndexChange;
 import liquibase.database.Database;
+import liquibase.database.core.DB2Database;
 import liquibase.database.core.MSSQLDatabase;
 import liquibase.database.core.OracleDatabase;
+import liquibase.database.core.PostgresDatabase;
 import liquibase.diff.output.DiffOutputControl;
 import liquibase.diff.output.changelog.AbstractChangeGenerator;
 import liquibase.diff.output.changelog.ChangeGeneratorChain;
@@ -58,7 +60,7 @@ public class MissingPrimaryKeyChangeGenerator extends AbstractChangeGenerator im
 
         PrimaryKey pk = (PrimaryKey) missingObject;
 
-        AddPrimaryKeyChange change = new AddPrimaryKeyChange();
+        AddPrimaryKeyChange change = createAddPrimaryKeyChange();
         change.setTableName(pk.getTable().getName());
         if (control.getIncludeCatalog()) {
             change.setCatalogName(pk.getTable().getSchema().getCatalogName());
@@ -75,8 +77,12 @@ public class MissingPrimaryKeyChangeGenerator extends AbstractChangeGenerator im
         if (referenceDatabase instanceof MSSQLDatabase && pk.getBackingIndex() != null && pk.getBackingIndex().getClustered() != null && !pk.getBackingIndex().getClustered()) {
             change.setClustered(false);
         }
+        if (referenceDatabase instanceof PostgresDatabase && pk.getBackingIndex() != null && pk.getBackingIndex().getClustered() != null && pk.getBackingIndex().getClustered()) {
+            change.setClustered(true);
+        }
 
-        if (comparisonDatabase instanceof OracleDatabase) {
+        if (comparisonDatabase instanceof OracleDatabase
+                || (comparisonDatabase instanceof DB2Database && pk.getBackingIndex() != null && !comparisonDatabase.isSystemObject(pk.getBackingIndex()))) {
             Index backingIndex = pk.getBackingIndex();
             if (backingIndex != null && backingIndex.getName() != null) {
                 try {
@@ -120,4 +126,9 @@ public class MissingPrimaryKeyChangeGenerator extends AbstractChangeGenerator im
         return returnList.toArray(new Change[returnList.size()]);
 
     }
+
+    protected AddPrimaryKeyChange createAddPrimaryKeyChange() {
+        return new AddPrimaryKeyChange();
+    }
+
 }

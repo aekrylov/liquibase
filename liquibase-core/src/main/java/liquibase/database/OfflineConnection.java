@@ -13,12 +13,14 @@ import liquibase.resource.ResourceAccessor;
 import liquibase.snapshot.DatabaseSnapshot;
 import liquibase.structure.DatabaseObject;
 import liquibase.structure.core.Catalog;
+import liquibase.structure.core.Schema;
 import liquibase.util.ObjectUtil;
 import liquibase.util.StringUtils;
 
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -64,9 +66,9 @@ public class OfflineConnection implements DatabaseConnection {
                 this.productVersion = paramEntry.getValue();
                 String[] versionParts = productVersion.split("\\.");
                 try {
-                    this.databaseMajorVersion = Integer.valueOf(versionParts[0]);
+                    this.databaseMajorVersion = Integer.parseInt(versionParts[0]);
                     if (versionParts.length > 1) {
-                        this.databaseMinorVersion = Integer.valueOf(versionParts[1]);
+                        this.databaseMinorVersion = Integer.parseInt(versionParts[1]);
                     }
                 } catch (NumberFormatException e) {
                     LogFactory.getInstance().getLog().warning("Cannot parse database version "+productVersion);
@@ -153,6 +155,18 @@ public class OfflineConnection implements DatabaseConnection {
     @Override
     public String getCatalog() throws DatabaseException {
         return catalog;
+    }
+
+    public String getSchema() {
+        if (snapshot == null) {
+            return null;
+        }
+        for (Schema schema : snapshot.get(Schema.class)) {
+            if (schema.isDefault()) {
+                return schema.getName();
+            }
+        }
+        return null;
     }
 
     @Override

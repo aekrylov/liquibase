@@ -2,6 +2,7 @@ package liquibase.util;
 
 import liquibase.database.Database;
 import liquibase.database.core.DB2Database;
+import liquibase.database.core.MSSQLDatabase;
 import liquibase.database.core.MySQLDatabase;
 import liquibase.database.core.OracleDatabase;
 import liquibase.datatype.DataTypeFactory;
@@ -129,11 +130,19 @@ public class SqlUtil {
                 stringVal = stringVal.replaceFirst("b'", "").replaceFirst("B'", "").replaceFirst("'$", "");
             }
             stringVal = stringVal.trim();
-            if (scanner.hasNextBoolean()) {
-                return scanner.nextBoolean();
-            } else {
-                return Integer.valueOf(stringVal);
+
+            if (database instanceof MySQLDatabase) {
+                return stringVal.equals("1") || stringVal.equalsIgnoreCase("true");
             }
+
+            Object value;
+            if (scanner.hasNextBoolean()) {
+                value = scanner.nextBoolean();
+            } else {
+                value = Integer.valueOf(stringVal);
+            }
+
+            return value;
         } else if (liquibaseDataType instanceof BlobType|| typeId == Types.BLOB) {
             if (strippedSingleQuotes) {
                 return stringVal;
@@ -199,8 +208,15 @@ public class SqlUtil {
             return null;
         } else if ((liquibaseDataType instanceof NumberType || typeId == Types.NUMERIC)) {
             if (scanner.hasNextBigDecimal()) {
+                if (database instanceof MSSQLDatabase && stringVal.endsWith(".0") || stringVal.endsWith(".00") || stringVal.endsWith(".000")) {
+                    //MSSQL can store the value with the decimal digits. return it directly to avoid unexpected differences
+                    return new DatabaseFunction(stringVal);
+                }
                 return scanner.nextBigDecimal();
             } else {
+                if (stringVal.equals("")) {
+                    return new DatabaseFunction("''"); //can have numeric default '' on sql server
+                }
                 return new DatabaseFunction(stringVal);
             }
         } else if (liquibaseDataType instanceof NVarcharType || typeId == Types.NVARCHAR) {

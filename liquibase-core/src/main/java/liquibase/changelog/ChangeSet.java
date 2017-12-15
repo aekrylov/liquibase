@@ -37,6 +37,8 @@ import java.util.*;
  */
 public class ChangeSet implements Conditional, ChangeLogChild {
 
+    protected CheckSum checkSum;
+
     public enum RunStatus {
         NOT_RAN, ALREADY_RAN, RUN_AGAIN, MARK_RAN, INVALID_MD5SUM
     }
@@ -238,18 +240,26 @@ public class ChangeSet implements Conditional, ChangeLogChild {
         return filePath;
     }
 
+    public void clearCheckSum() {
+        this.checkSum = null;
+    }
+
     public CheckSum generateCheckSum() {
-        StringBuffer stringToMD5 = new StringBuffer();
-        for (Change change : getChanges()) {
-            stringToMD5.append(change.generateCheckSum()).append(":");
+        if (checkSum == null) {
+            StringBuffer stringToMD5 = new StringBuffer();
+            for (Change change : getChanges()) {
+                stringToMD5.append(change.generateCheckSum()).append(":");
+            }
+
+            for (SqlVisitor visitor : this.getSqlVisitors()) {
+                stringToMD5.append(visitor.generateCheckSum()).append(";");
+            }
+
+
+            checkSum = CheckSum.compute(stringToMD5.toString());
         }
 
-        for (SqlVisitor visitor : this.getSqlVisitors()) {
-            stringToMD5.append(visitor.generateCheckSum()).append(";");
-        }
-
-
-        return CheckSum.compute(stringToMD5.toString());
+        return checkSum;
     }
 
     @Override
@@ -377,12 +387,16 @@ public class ChangeSet implements Conditional, ChangeLogChild {
             String changeSetAuthor = rollbackNode.getChildValue(null, "changeSetAuthor", String.class);
             String changeSetPath = rollbackNode.getChildValue(null, "changeSetPath", getFilePath());
 
-            ChangeSet changeSet = this.getChangeLog().getChangeSet(changeSetPath, changeSetAuthor, changeSetId);
-            if (changeSet == null) { //check from root
-                changeSet = getChangeLog().getRootChangeLog().getChangeSet(changeSetPath, changeSetAuthor, changeSetId);
-                if (changeSet == null) {
-                    throw new ParsedNodeException("Change set " + new ChangeSet(changeSetId, changeSetAuthor, false, false, changeSetPath, null, null, null).toString(false) + " does not exist");
+            DatabaseChangeLog changeLog = this.getChangeLog();
+            ChangeSet changeSet = changeLog.getChangeSet(changeSetPath, changeSetAuthor, changeSetId);
+            while (changeSet == null && changeLog != null) {
+                changeLog = changeLog.getParentChangeLog();
+                if (changeLog != null) {
+                    changeSet = changeLog.getChangeSet(changeSetPath, changeSetAuthor, changeSetId);
                 }
+            }
+            if (changeSet == null) {
+                throw new ParsedNodeException("Change set " + new ChangeSet(changeSetId, changeSetAuthor, false, false, changeSetPath, null, null, null).toString(false) + " does not exist");
             }
             for (Change change : changeSet.getChanges()) {
                 rollback.getChanges().add(change);

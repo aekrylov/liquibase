@@ -112,7 +112,7 @@ public class OracleDatabase extends AbstractJdbcDatabase {
                     }
                 } catch (SQLException e) {
                     String message = "Cannot read from v$parameter: "+e.getMessage();
-                    LogFactory.getLogger().info("Could not set check compatibility mode on OracleDatabase: " + message);
+                    LogFactory.getLogger().info("Could not set check compatibility mode on OracleDatabase, assuming not running in any sort of compatibility mode: " + message);
                 } finally {
                     JdbcUtils.close(resultSet, statement);
                 }
@@ -473,7 +473,8 @@ public class OracleDatabase extends AbstractJdbcDatabase {
             Statement statement = null;
             try {
                 statement = ((JdbcConnection) connection).createStatement();
-                statement.executeQuery("select 1 from dba_recyclebin where 0=1");
+                ResultSet resultSet = statement.executeQuery("select 1 from dba_recyclebin where 0=1");
+                resultSet.close(); //don't need to do anything with the result set, just make sure statement ran.
                 this.canAccessDbaRecycleBin = true;
             } catch (Exception e) {
                 if (e instanceof SQLException && e.getMessage().startsWith("ORA-00942")) { //ORA-00942: table or view does not exist

@@ -12,6 +12,7 @@ import liquibase.exception.DatabaseException;
 import liquibase.exception.DateParseException;
 import liquibase.structure.core.Catalog;
 import liquibase.structure.core.Index;
+import liquibase.structure.core.Schema;
 import liquibase.util.JdbcUtils;
 import liquibase.util.StringUtils;
 
@@ -28,6 +29,7 @@ public class DB2Database extends AbstractJdbcDatabase {
         super.setCurrentDateTimeFunction("CURRENT TIMESTAMP");
         super.sequenceNextValueFunction = "NEXT VALUE FOR %s";
         super.sequenceCurrentValueFunction = "PREVIOUS VALUE FOR %s";
+        super.unquotedObjectsAreUppercased=true;
     }
 
     @Override
@@ -85,9 +87,13 @@ public class DB2Database extends AbstractJdbcDatabase {
         }
 
 
-        if (getConnection() == null || getConnection() instanceof OfflineConnection) {
+        if (getConnection() == null) {
             return null;
         }
+        if (getConnection() instanceof OfflineConnection) {
+            return ((OfflineConnection) getConnection()).getSchema();
+        }
+
         Statement stmt = null;
         ResultSet rs = null;
         try {
@@ -108,14 +114,6 @@ public class DB2Database extends AbstractJdbcDatabase {
         }
 
         return defaultSchemaName;
-    }
-
-    @Override
-    public String correctObjectName(String objectName, Class<? extends DatabaseObject> objectType) {
-        if (objectName == null) {
-            return null;
-        }
-        return objectName.toUpperCase();
     }
 
     @Override
@@ -253,4 +251,11 @@ public class DB2Database extends AbstractJdbcDatabase {
         return this.isZOS;
     }
 
+    @Override
+    public boolean isSystemObject(DatabaseObject example) {
+        if (example instanceof Index && example.getName() != null && example.getName().matches("SQL\\d+")) {
+            return true;
+        }
+        return super.isSystemObject(example);
+    }
 }

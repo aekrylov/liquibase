@@ -4,7 +4,7 @@
 
     <groupId>org.liquibase</groupId>
     <artifactId>liquibase-parent</artifactId>
-    <version>3.5.1-cg.1</version>
+    <version>3.5.3-cg.1</version>
     <packaging>pom</packaging>
 
     <name>Liquibase Parent Configuration</name>
@@ -31,7 +31,7 @@
         <connection>scm:git:git@github.com:liquibase/liquibase.git</connection>
         <url>scm:git:git@github.com:liquibase/liquibase.git</url>
         <developerConnection>scm:git:git@github.com:liquibase/liquibase.git</developerConnection>
-        <tag>liquibase-parent-3.5.1</tag>
+        <tag>liquibase-parent-3.5.3</tag>
     </scm>
 
     <developers>
@@ -166,7 +166,7 @@
             <dependency>
                 <groupId>org.yaml</groupId>
                 <artifactId>snakeyaml</artifactId>
-                <version>1.13</version>
+                <version>1.17</version>
                 <optional>true</optional>
             </dependency>
 
