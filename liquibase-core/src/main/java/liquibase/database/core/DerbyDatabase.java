@@ -137,40 +137,6 @@ public class DerbyDatabase extends AbstractJdbcDatabase {
         return super.getViewDefinition(schema, name).replaceFirst("CREATE VIEW \\w+ AS ", "");
     }
 
-    @Override
-    public void close() throws DatabaseException {
-        String url = getConnection().getURL();
-        String driverName = getDefaultDriver(url);
-        super.close();
-        if (driverName != null && driverName.toLowerCase().contains("embedded")) {
-            try {
-                if (url.contains(";")) {
-                    url = url.substring(0, url.indexOf(";")) + ";shutdown=true";
-                } else {
-                    url += ";shutdown=true";
-                }
-                LogFactory.getLogger().info("Shutting down derby connection: " + url);
-                // this cleans up the lock files in the embedded derby database folder
-                ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
-                Driver driver = (Driver) contextClassLoader.loadClass(driverName).newInstance();
-                driver.connect(url, null);
-            } catch (Exception e) {
-                if (e instanceof SQLException) {
-                    String state = ((SQLException) e).getSQLState();
-                    if ("XJ015".equals(state) || "08006".equals(state)) {
-                        // "The XJ015 error (successful shutdown of the Derby engine) and the 08006 
-                        // error (successful shutdown of a single database) are the only exceptions 
-                        // thrown by Derby that might indicate that an operation succeeded. All other 
-                        // exceptions indicate that an operation failed."
-                        // See http://db.apache.org/derby/docs/dev/getstart/rwwdactivity3.html
-                        return;
-                    }
-                }
-                throw new DatabaseException("Error closing derby cleanly", e);
-            }
-        }
-    }
-
     /**
      * Determine Apache Derby driver major/minor version.
      */
